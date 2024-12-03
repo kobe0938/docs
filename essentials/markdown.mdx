@@ -1,88 +1,127 @@
 ---
-title: 'Markdown Syntax'
-description: 'Text, title, and styling in standard markdown'
-icon: 'text-size'
+title: 'Querying Text Models'
+description: 'Learn how to interact with Diffusive Labs text models'
 ---
 
-## Titles
+# Querying Text Models
 
-Best used for section headers.
+Diffusive Labs offers an OpenAI-compatible REST API for querying text models. You can interact with our models through:
 
-```md
-## Titles
-```
+* The Diffusive Python client library
+* The web console
+* LangChain
+* Direct REST API calls using any programming language
+* The OpenAI Python client
 
-### Subtitles
+## Using the Web Console
 
-Best use to subsection headers.
+All Diffusive models can be accessed through our web console at diffusive.ai. The playground allows you to test models by entering prompts and adjusting request parameters.
 
-```md
-### Subtitles
-```
+* **Non-chat models** use the completions API, passing your input directly to the model
+* **Chat models** (also known as instruct models) use the chat completions API by default, automatically formatting your input with the model's conversation style
+* Advanced users can switch to the completions API by disabling "Use chat template"
 
-<Tip>
+## Using the API
 
-Each **title** and **subtitle** creates an anchor and also shows up on the table of contents on the right.
+### Chat Completions API
 
-</Tip>
+Models with conversation configurations use the chat completions API. These models are optimized for specific conversation styles. For example, our Llama chat models use this template:
+text
+<s>[INST] <<SYS>>
+<</SYS>>
+{user_message_1} [/INST]
 
-## Text Formatting
 
-We support most markdown formatting. Simply add `**`, `_`, or `~` around text to format it.
+We recommend using the chat completions API when possible to avoid prompt formatting errors.
 
-| Style         | How to write it   | Result          |
-| ------------- | ----------------- | --------------- |
-| Bold          | `**bold**`        | **bold**        |
-| Italic        | `_italic_`        | _italic_        |
-| Strikethrough | `~strikethrough~` | ~strikethrough~ |
+#### Overriding the System Prompt
 
-You can combine these. For example, write `**_bold and italic_**` to get **_bold and italic_** text.
+Many models include default system prompts. For example, our Llama 2 models use:
 
-You need to use HTML to write superscript and subscript text. That is, add `<sup>` or `<sub>` around your text.
+> You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.
 
-| Text Size   | How to write it          | Result                 |
-| ----------- | ------------------------ | ---------------------- |
-| Superscript | `<sup>superscript</sup>` | <sup>superscript</sup> |
-| Subscript   | `<sub>subscript</sub>`   | <sub>subscript</sub>   |
+You can override this by setting the first message with role `system`:
+json
+[
+{
+"role": "system",
+"content": "You are a pirate."
+},
+{
+"role": "user",
+"content": "Hello, what is your name?"
+}
+]
 
-## Linking to Pages
 
-You can add a link by wrapping text in `[]()`. You would write `[link to google](https://google.com)` to [link to google](https://google.com).
+### Completions API
 
-Links to pages in your docs need to be root-relative. Basically, you should include the entire folder path. For example, `[link to text](/writing-content/text)` links to the page "Text" in our components section.
+The completions API is supported by all text models. It generates text based on your input prompt until reaching either:
+* Maximum output tokens
+* Model's end-of-sequence (EOS) token
 
-Relative links like `[link to text](../text)` will open slower because we cannot optimize them as easily.
+Most models automatically prepend the beginning-of-sequence (BOS) token to your prompt.
 
-## Blockquotes
+## Getting Usage Info
 
-### Singleline
+All responses include a `usage` field containing:
+* Number of prompt tokens processed
+* Number of completion tokens generated
 
-To create a blockquote, add a `>` in front of a paragraph.
+## Advanced Options
 
-> Dorothy followed her through many of the beautiful rooms in her castle.
+### Streaming
 
-```md
-> Dorothy followed her through many of the beautiful rooms in her castle.
-```
+Enable streaming to receive results incrementally as tokens are generated:
 
-### Multiline
+python
+from diffusive.client import Diffusive
+client = Diffusive(api_key="<DIFFUSIVE_API_KEY>")
+response = client.completions.create(
+model="accounts/diffusive/models/mixtral-8x7b-instruct",
+prompt="Write a story about",
+stream=True
+)
+for chunk in response:
+print(chunk.choices[0].text, end="")
 
-> Dorothy followed her through many of the beautiful rooms in her castle.
->
-> The Witch bade her clean the pots and kettles and sweep the floor and keep the fire fed with wood.
 
-```md
-> Dorothy followed her through many of the beautiful rooms in her castle.
->
-> The Witch bade her clean the pots and kettles and sweep the floor and keep the fire fed with wood.
-```
+### Async Mode
 
-### LaTeX
+Our Python client supports asynchronous operations:
+python
+async with Diffusive(api_key="<DIFFUSIVE_API_KEY>") as client:
+response = await client.chat.completions.create(
+model="accounts/diffusive/models/mixtral-8x7b-instruct",
+messages=[{"role": "user", "content": "Hello!"}]
+)
 
-Mintlify supports [LaTeX](https://www.latex-project.org) through the Latex component.
 
-<Latex>8 x (vk x H1 - H2) = (0,1)</Latex>
+### Sampling Options
 
-```md
-<Latex>8 x (vk x H1 - H2) = (0,1)</Latex>
-```
+Control text generation with these parameters:
+
+* `temperature` (0-2): Higher values increase randomness
+* `top_p` (0-1): Nucleus sampling probability threshold
+* `top_k` (1+): Limits token selection to top K options
+* `min_p` (0-1): Minimum token probability threshold
+* `frequency_penalty` (-2 to 2): Penalizes frequent tokens
+* `presence_penalty` (-2 to 2): Penalizes any repeated tokens
+* `repetition_penalty` (1+): Scales penalty for repeated tokens
+
+### Debugging Options
+
+* `ignore_eos`: Continue generation past EOS token
+* `logprobs`: Return token probability information
+* `echo`: Include prompt in response
+* `raw_output`: Return detailed model input/output data (experimental)
+
+## Appendix
+
+### Tokenization
+
+Models process text as tokens, which can be characters, subwords, or words. Different models use different tokenizers, affecting token counts and costs. Check the `usage` field in responses for actual token counts.
+
+<Card title="Token Counter" icon="calculator" href="/tools/token-counter">
+  Estimate token counts for your inputs
+</Card>

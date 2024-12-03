@@ -1,0 +1,79 @@
+---
+title: 'Concepts'
+description: 'Core concepts of the Diffusive Labs platform'
+---
+
+# Concepts
+
+This document outlines basic Diffusive Labs concepts.
+
+## Resources
+
+### Account
+
+Your account is the top-level resource under which other resources are located. Quotas and usage limits are enforced at the account level.
+
+For developer accounts, the account ID is automatically generated from your signup email. Enterprise accounts have the option to choose a custom, unique account ID.
+
+### User
+
+A user is an email address associated with an account. Only users who have been added to an account can access private resources within that account.
+
+### Model
+
+A model represents a set of model weights and associated metadata. Models must be deployed to one or more deployments to be used for inference, creating a "deployed model". We support two types of models:
+
+* Base models
+* Parameter-efficient fine-tuned (PEFT) addons
+
+For more details, see our Models overview page.
+
+### Deployment
+
+A deployment is a collection of one or more model servers that host a base model and optionally one or more PEFT addons (also known as LoRA adapters).
+
+Diffusive Labs provides "serverless" deployments hosting popular base models. These deployments can be used for both serverless inference and hosting serverless addons.
+
+### Deployed Model
+
+A deployed model is an instance of a base model or PEFT addon that has been loaded into a deployment and is ready for inference.
+
+### Dataset
+
+A dataset is an immutable collection of training examples used for fine-tuning models.
+
+### Fine-tuning Job
+
+A fine-tuning job is an offline training process that uses a dataset to train a PEFT addon model.
+
+## Resource Names and IDs
+
+A full resource name follows this format:
+
+accounts/my-account/models/my-model
+
+
+The individual segments `my-account` and `my-model` are account and model IDs, respectively.
+
+Resource IDs must follow these constraints:
+* Length between 1 and 63 characters (inclusive)
+* Can only contain lowercase letters (a-z), numbers (0-9), and hyphens (-)
+* Cannot begin or end with a hyphen (-)
+
+Some APIs require the full resource name, while others may accept just the resource ID when the context is clear.
+
+## Control Plane and Data Plane
+
+The Diffusive Labs API is divided into two main components:
+
+* **Control Plane**: APIs used for managing resource lifecycles, including account, models, and deployments management.
+* **Data Plane**: APIs used for inference and the backend services that power them.
+
+## Interfaces
+
+Users can interact with Diffusive Labs through multiple interfaces:
+
+* **Web Console**: Access through https://diffusive.ai
+* **CLI**: Use our command-line tool `diffctl`
+* **Python SDK**: Our official Python client library
+* **REST API**: Direct API access for custom integrations
