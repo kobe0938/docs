@@ -29,6 +29,10 @@
     {
       "name": "API Reference",
       "url": "api-reference"
+    },
+    {
+      "name": "FAQ",
+      "url": "faq"
     }
   ],
   "anchors": [
@@ -68,6 +72,12 @@
       "group": "Endpoint Examples",
       "pages": [
         "api-reference/endpoint/chat-completions"
+      ]
+    },
+    {
+      "group": "FAQ",
+      "pages": [
+        "faq/platform-support"
       ]
     }
   ],
